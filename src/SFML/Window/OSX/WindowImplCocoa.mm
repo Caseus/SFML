@@ -44,7 +44,6 @@ namespace priv
 
 ////////////////////////////////////////////////////////////
 WindowImplCocoa::WindowImplCocoa(WindowHandle handle)
-: m_showCursor(true)
 {
     // Ask for a pool.
     retainPool();
@@ -82,7 +81,6 @@ WindowImplCocoa::WindowImplCocoa(WindowHandle handle)
 WindowImplCocoa::WindowImplCocoa(VideoMode mode, 
                                  const std::string& title, 
                                  unsigned long style)
-: m_showCursor(true)
 {
     // Transform the app process.
     setUpProcess();
@@ -171,10 +169,6 @@ void WindowImplCocoa::windowResized(unsigned int width, unsigned int height)
 ////////////////////////////////////////////////////////////
 void WindowImplCocoa::windowLostFocus(void)
 {
-    if (!m_showCursor) {
-        [m_delegate showMouseCursor]; // Make sur the cursor is visible
-    }
-    
     Event event;
     event.type = Event::LostFocus;
     
@@ -185,132 +179,11 @@ void WindowImplCocoa::windowLostFocus(void)
 ////////////////////////////////////////////////////////////
 void WindowImplCocoa::windowGainedFocus(void)
 {
-    if (!m_showCursor) {
-        [m_delegate hideMouseCursor]; // Restore user's setting
-    }
-    
     Event event;
     event.type = Event::GainedFocus;
     
     pushEvent(event);
 }
-    
-#pragma mark
-#pragma mark WindowImplCocoa's mouse-event methods
-    
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseDownAt(Mouse::Button button, int x, int y)
-{
-    Event event;
-    event.type = Event::MouseButtonPressed;
-    event.mouseButton.button = button;
-    event.mouseButton.x = x;
-    event.mouseButton.y = y;
-    
-    pushEvent(event);
-}
-
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseUpAt(Mouse::Button button, int x, int y)
-{
-    Event event;
-    event.type = Event::MouseButtonReleased;
-    event.mouseButton.button = button;
-    event.mouseButton.x = x;
-    event.mouseButton.y = y;
-    
-    pushEvent(event);
-}
-
-
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseMovedAt(int x, int y)
-{
-    Event event;
-    event.type = Event::MouseMoved;
-    event.mouseMove.x = x;
-    event.mouseMove.y = y;
-    
-    pushEvent(event);
-}
-
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseWheelScrolledAt(float delta, int x, int y)
-{
-    Event event;
-    event.type = Event::MouseWheelMoved;
-    event.mouseWheel.delta = delta;
-    event.mouseWheel.x = x;
-    event.mouseWheel.y = y;
-    
-    pushEvent(event);
-}
-
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseMovedIn(void)
-{
-    if (!m_showCursor) {
-        [m_delegate hideMouseCursor]; // Restore user's setting
-    }
-    
-    Event event;
-    event.type = Event::MouseEntered;
-    
-    pushEvent(event);
-}
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::mouseMovedOut(void)
-{
-    if (!m_showCursor) {
-        [m_delegate showMouseCursor]; // Make sur the cursor is visible
-    }
-    
-    Event event;
-    event.type = Event::MouseLeft;
-    
-    pushEvent(event);
-}
-    
-    
-#pragma mark
-#pragma mark WindowImplCocoa's key-event methods
-    
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::keyDown(Event::KeyEvent key)
-{
-    Event event;
-    event.type = Event::KeyPressed;
-    event.key = key;
-    
-    pushEvent(event);
-}
-
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::keyUp(Event::KeyEvent key)
-{
-    Event event;
-    event.type = Event::KeyReleased;
-    event.key = key;
-    
-    pushEvent(event);
-}
-
-
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::textEntered(unichar charcode)
-{
-    Event event;
-    event.type = Event::TextEntered;
-    event.text.unicode = charcode;
-    
-    pushEvent(event);
-}
-
     
 #pragma mark
 #pragma mark WindowImplCocoa's event-related methods
@@ -382,30 +255,6 @@ void WindowImplCocoa::setVisible(bool visible)
         [m_delegate showWindow];
     } else {
         [m_delegate hideWindow];
-    }
-}
-
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::setMouseCursorVisible(bool visible)
-{
-    m_showCursor = visible;
-    
-    if (m_showCursor) {
-        [m_delegate showMouseCursor];
-    } else {
-        [m_delegate hideMouseCursor];
-    }
-}
-
-    
-////////////////////////////////////////////////////////////
-void WindowImplCocoa::setKeyRepeatEnabled(bool enabled)
-{
-    if (enabled) {
-        [m_delegate enableKeyRepeat];
-    } else {
-        [m_delegate disableKeyRepeat];
     }
 }
 

@@ -43,7 +43,6 @@ namespace sf {
 ////////////////////////////////////////////////////////////
 /// Implementation of WindowImplDelegateProtocol for window managment.
 /// 
-/// Key and mouse events are delegated to its view.
 /// Window events are managed by this class.
 ///
 /// Used when SFML handle everything and when a NSWindow* is given

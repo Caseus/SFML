@@ -13,16 +13,6 @@ set(SRC
     ${INCROOT}/GlResource.hpp
     ${INCROOT}/ContextSettings.hpp
     ${INCROOT}/Event.hpp
-    ${SRCROOT}/InputImpl.hpp
-    ${INCROOT}/Joystick.hpp
-    ${SRCROOT}/Joystick.cpp
-    ${SRCROOT}/JoystickImpl.hpp
-    ${SRCROOT}/JoystickManager.cpp
-    ${SRCROOT}/JoystickManager.hpp
-    ${INCROOT}/Keyboard.hpp
-    ${SRCROOT}/Keyboard.cpp
-    ${INCROOT}/Mouse.hpp
-    ${SRCROOT}/Mouse.cpp
     ${SRCROOT}/VideoMode.cpp
     ${INCROOT}/VideoMode.hpp
     ${SRCROOT}/VideoModeImpl.hpp
@@ -40,10 +30,6 @@ if(WINDOWS)
         ${SRC}
         ${SRCROOT}/Win32/WglContext.cpp
         ${SRCROOT}/Win32/WglContext.hpp
-        ${SRCROOT}/Win32/InputImpl.cpp
-        ${SRCROOT}/Win32/InputImpl.hpp
-        ${SRCROOT}/Win32/JoystickImpl.cpp
-        ${SRCROOT}/Win32/JoystickImpl.hpp
         ${SRCROOT}/Win32/VideoModeImpl.cpp
         ${SRCROOT}/Win32/WindowImplWin32.cpp
         ${SRCROOT}/Win32/WindowImplWin32.hpp
@@ -55,10 +41,6 @@ elseif(LINUX)
         ${SRCROOT}/Linux/Display.hpp
         ${SRCROOT}/Linux/GlxContext.cpp
         ${SRCROOT}/Linux/GlxContext.hpp
-        ${SRCROOT}/Linux/InputImpl.cpp
-        ${SRCROOT}/Linux/InputImpl.hpp
-        ${SRCROOT}/Linux/JoystickImpl.cpp
-        ${SRCROOT}/Linux/JoystickImpl.hpp
         ${SRCROOT}/Linux/VideoModeImpl.cpp
         ${SRCROOT}/Linux/WindowImplX11.cpp
         ${SRCROOT}/Linux/WindowImplX11.hpp
@@ -70,14 +52,6 @@ else() # MACOSX
         ${SRCROOT}/OSX/cpp_objc_conversion.mm
         ${SRCROOT}/OSX/cg_sf_conversion.hpp
         ${SRCROOT}/OSX/cg_sf_conversion.cpp
-        ${SRCROOT}/OSX/InputImpl.mm
-        ${SRCROOT}/OSX/InputImpl.hpp
-        ${SRCROOT}/OSX/HIDInputManager.hpp
-        ${SRCROOT}/OSX/HIDInputManager.mm
-        ${SRCROOT}/OSX/HIDJoystickManager.hpp
-        ${SRCROOT}/OSX/HIDJoystickManager.cpp
-        ${SRCROOT}/OSX/JoystickImpl.cpp
-        ${SRCROOT}/OSX/JoystickImpl.hpp
         ${SRCROOT}/OSX/SFApplication.h
         ${SRCROOT}/OSX/SFApplication.m
         ${SRCROOT}/OSX/SFContext.hpp

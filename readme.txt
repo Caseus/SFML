@@ -1,3 +1,9 @@
+
+SFML with the input system violently torn out (for ease of use with OIS)
+
+Appears to work on Linux, untested on Windows and OSX
+
+
 SFML - Simple and Fast Multimedia Library
 =========================================
 

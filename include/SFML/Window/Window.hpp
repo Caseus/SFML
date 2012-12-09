@@ -329,30 +329,6 @@ public :
     void setVerticalSyncEnabled(bool enabled);
 
     ////////////////////////////////////////////////////////////
-    /// \brief Show or hide the mouse cursor
-    ///
-    /// The mouse cursor is visible by default.
-    ///
-    /// \param visible True to show the mouse cursor, false to hide it
-    ///
-    ////////////////////////////////////////////////////////////
-    void setMouseCursorVisible(bool visible);
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Enable or disable automatic key-repeat
-    ///
-    /// If key repeat is enabled, you will receive repeated
-    /// KeyPressed events while keeping a key pressed. If it is disabled,
-    /// you will only get a single event when the key is pressed.
-    ///
-    /// Key repeat is enabled by default.
-    ///
-    /// \param enabled True to enable, false to disable
-    ///
-    ////////////////////////////////////////////////////////////
-    void setKeyRepeatEnabled(bool enabled);
-
-    ////////////////////////////////////////////////////////////
     /// \brief Limit the framerate to a maximum fixed frequency
     ///
     /// If a limit is set, the window will use a small delay after
@@ -368,19 +344,6 @@ public :
     ///
     ////////////////////////////////////////////////////////////
     void setFramerateLimit(unsigned int limit);
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Change the joystick threshold
-    ///
-    /// The joystick threshold is the value below which
-    /// no JoystickMoved event will be generated.
-    ///
-    /// The threshold value is 0.1 by default.
-    ///
-    /// \param threshold New threshold, in the range [0, 100]
-    ///
-    ////////////////////////////////////////////////////////////
-    void setJoystickThreshold(float threshold);
 
     ////////////////////////////////////////////////////////////
     /// \brief Activate or deactivate the window as the current target
@@ -497,7 +460,7 @@ private:
 /// like Qt or wxWidgets.
 ///
 /// The sf::Window class provides a simple interface for manipulating
-/// the window: move, resize, show/hide, control mouse cursor, etc.
+/// the window: move, resize, show/hide, etc.
 /// It also provides event handling through its pollEvent() and waitEvent()
 /// functions.
 ///

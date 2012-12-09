@@ -30,9 +30,8 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Config.hpp>
 #include <SFML/System/NonCopyable.hpp>
+#include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
-#include <SFML/Window/Joystick.hpp>
-#include <SFML/Window/JoystickImpl.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/Window/WindowHandle.hpp>
 #include <queue>
@@ -83,15 +82,6 @@ public :
     ///
     ////////////////////////////////////////////////////////////
     virtual ~WindowImpl();
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Change the joystick threshold, ie. the value below which
-    ///        no move event will be generated
-    ///
-    /// \param threshold : New threshold, in range [0, 100]
-    ///
-    ////////////////////////////////////////////////////////////
-    void setJoystickThreshold(float threshold);
 
     ////////////////////////////////////////////////////////////
     /// \brief Return the next window event available
@@ -175,22 +165,6 @@ public :
     ////////////////////////////////////////////////////////////
     virtual void setVisible(bool visible) = 0;
 
-    ////////////////////////////////////////////////////////////
-    /// \brief Show or hide the mouse cursor
-    ///
-    /// \param visible True to show, false to hide
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void setMouseCursorVisible(bool visible) = 0;
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Enable or disable automatic key-repeat
-    ///
-    /// \param enabled True to enable, false to disable
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void setKeyRepeatEnabled(bool enabled) = 0;
-
 protected :
 
     ////////////////////////////////////////////////////////////
@@ -218,19 +192,10 @@ protected :
     virtual void processEvents() = 0;
 
 private :
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Read the joysticks state and generate the appropriate events
-    ///
-    ////////////////////////////////////////////////////////////
-    void processJoystickEvents();
-
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
     std::queue<Event> m_events;                     ///< Queue of available events
-    JoystickState     m_joyStates[Joystick::Count]; ///< Previous state of the joysticks
-    float             m_joyThreshold;               ///< Joystick threshold (minimum motion for MOVE event to be generated)
 };
 
 } // namespace priv

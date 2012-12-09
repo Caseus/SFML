@@ -221,8 +221,6 @@
         
         // Register for event.
         [m_window setDelegate:self];
-        [m_window setAcceptsMouseMovedEvents:YES];
-        [m_window setIgnoresMouseEvents:NO];
         
         // And some other things...
         [m_window setAutodisplay:YES];
@@ -264,28 +262,6 @@
 -(sf::WindowHandle)getSystemHandle
 {
     return m_window;
-}
-
-
-////////////////////////////////////////////////////////
--(void)hideMouseCursor
-{
-    [NSCursor hide];
-}
-
-
-////////////////////////////////////////////////////////
--(void)showMouseCursor
-{
-    [NSCursor unhide];
-}
-
-
-////////////////////////////////////////////////////////
--(void)setCursorPositionToX:(unsigned int)x Y:(unsigned int)y
-{
-    // Forward to...
-    [m_oglView setCursorPositionToX:x Y:y];
 }
 
 
@@ -365,20 +341,6 @@
     [m_window close];
     [m_window setDelegate:nil];
     [self setRequesterTo:0];
-}
-
-
-////////////////////////////////////////////////////////
--(void)enableKeyRepeat
-{
-    [m_oglView enableKeyRepeat];
-}
-
-
-////////////////////////////////////////////////////////
--(void)disableKeyRepeat
-{
-    [m_oglView disableKeyRepeat];
 }
 
 

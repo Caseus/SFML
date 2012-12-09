@@ -39,31 +39,11 @@ namespace sf {
 ///
 /// Handle event and send them back to the requester.
 ///
-/// In order to send correct mouse coordonate to the requester when
-/// the window is in fullscreen we use m_realSize to represent the
-/// back buffer size (see SFWindowController). If 'm_realSize' is
-/// bound to its default value we don't recompute the mouse position
-/// and assume it's correct.
-///
-/// As I don't have the right control keycode I cannot implement left-right
-/// recognition for this key. (See SFOpenGLView.mm for more info.)
-///
 ////////////////////////////////////////////////////////////
 @interface SFOpenGLView : NSOpenGLView {
     sf::priv::WindowImplCocoa*    m_requester;
-    BOOL                          m_useKeyRepeat;
     NSTrackingRectTag             m_trackingTag;
-    BOOL                          m_mouseIsIn;
     NSSize                        m_realSize;
-    
-    /// 'modifiers' state
-    BOOL m_rightShiftWasDown;
-    BOOL m_leftShiftWasDown;
-    BOOL m_rightCommandWasDown;
-    BOOL m_leftCommandWasDown;
-    BOOL m_rightAlternateWasDown;
-    BOOL m_leftAlternateWasDown;
-    BOOL m_controlWasDown;
 }
 
 ////////////////////////////////////////////////////////////
@@ -80,30 +60,9 @@ namespace sf {
 
 ////////////////////////////////////////////////////////////
 /// Set the real size of view (it should be the back buffer size).
-/// If not set, or set to its default value NSZeroSize, the view
-/// won't recompute the mouse coordinates before sending them
-/// to the requester.
+/// If not set, or set to its default value NSZeroSize
 /// 
 ////////////////////////////////////////////////////////////
 -(void)setRealSize:(NSSize)newSize;
-
-////////////////////////////////////////////////////////////
-/// Move the mouse cursor to (x,y) (SFML Coordinates).
-/// 
-////////////////////////////////////////////////////////////
--(void)setCursorPositionToX:(unsigned int)x Y:(unsigned int)y;
-
-////////////////////////////////////////////////////////////
-/// Adjust key repeat configuration.
-/// 
-////////////////////////////////////////////////////////////
--(void)enableKeyRepeat;
--(void)disableKeyRepeat;
-
-////////////////////////////////////////////////////////////
-/// Compute the position of the cursor.
-/// 
-////////////////////////////////////////////////////////////
--(NSPoint)cursorPositionFromEvent:(NSEvent *)eventOrNil;
 
 @end

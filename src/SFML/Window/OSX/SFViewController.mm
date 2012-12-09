@@ -107,28 +107,6 @@
 }
 
 
-////////////////////////////////////////////////////////
--(void)hideMouseCursor
-{
-    [NSCursor hide];
-}
-
-
-////////////////////////////////////////////////////////
--(void)showMouseCursor
-{
-    [NSCursor unhide];
-}
-
-
-////////////////////////////////////////////////////////
--(void)setCursorPositionToX:(unsigned int)x Y:(unsigned int)y
-{
-    // Forward to...
-    [m_oglView setCursorPositionToX:x Y:y];
-}
-
-
 ////////////////////////////////////////////////////////////
 -(NSPoint)position
 {
@@ -189,20 +167,6 @@
 -(void)closeWindow
 {
     sf::err() << "Cannot close SFML area when SFML is integrated in a NSView." << std::endl;
-}
-
-
-////////////////////////////////////////////////////////
--(void)enableKeyRepeat
-{
-    [m_oglView enableKeyRepeat];
-}
-
-
-////////////////////////////////////////////////////////
--(void)disableKeyRepeat
-{
-    [m_oglView disableKeyRepeat];
 }
 
 

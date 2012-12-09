@@ -31,7 +31,6 @@
 #include <SFML/System/Utf.hpp>
 #include <SFML/System/Err.hpp>
 #include <X11/Xutil.h>
-#include <X11/keysym.h>
 #include <X11/extensions/Xrandr.h>
 #include <sstream>
 #include <vector>
@@ -43,9 +42,7 @@
 namespace
 {
     sf::priv::WindowImplX11* fullscreenWindow = NULL;
-    unsigned long            eventMask        = FocusChangeMask | ButtonPressMask | ButtonReleaseMask | ButtonMotionMask |
-                                                PointerMotionMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask |
-                                                EnterWindowMask | LeaveWindowMask;
+    unsigned long            eventMask        = FocusChangeMask | StructureNotifyMask;
 
     /// Filter the events received by windows
     /// (only allow those matching a specific window)
@@ -64,13 +61,9 @@ namespace priv
 ////////////////////////////////////////////////////////////
 WindowImplX11::WindowImplX11(WindowHandle handle) :
 m_window      (0),
-m_inputMethod (NULL),
-m_inputContext(NULL),
 m_isExternal  (true),
 m_atomClose   (0),
-m_oldVideoMode(-1),
-m_hiddenCursor(0),
-m_keyRepeat   (true)
+m_oldVideoMode(-1)
 {
     // Open a connection with the X server
     m_display = OpenDisplay();
@@ -82,7 +75,7 @@ m_keyRepeat   (true)
     if (m_window)
     {
         // Make sure the window is listening to all the requiered events
-        XSelectInput(m_display, m_window, eventMask & ~ButtonPressMask);
+        XSelectInput(m_display, m_window, eventMask);
 
         // Do some common initializations
         initialize();
@@ -93,13 +86,9 @@ m_keyRepeat   (true)
 ////////////////////////////////////////////////////////////
 WindowImplX11::WindowImplX11(VideoMode mode, const std::string& title, unsigned long style) :
 m_window      (0),
-m_inputMethod (NULL),
-m_inputContext(NULL),
 m_isExternal  (false),
 m_atomClose   (0),
-m_oldVideoMode(-1),
-m_hiddenCursor(0),
-m_keyRepeat   (true)
+m_oldVideoMode(-1)
 {
     // Open a connection with the X server
     m_display = OpenDisplay();
@@ -220,13 +209,6 @@ m_keyRepeat   (true)
 
     // Do some common initializations
     initialize();
-
-    // In fullscreen mode, we must grab keyboard and mouse inputs
-    if (fullscreen)
-    {
-        XGrabPointer(m_display, m_window, true, 0, GrabModeAsync, GrabModeAsync, m_window, None, CurrentTime);
-        XGrabKeyboard(m_display, m_window, true, GrabModeAsync, GrabModeAsync, CurrentTime);
-    }
 }
 
 
@@ -236,24 +218,12 @@ WindowImplX11::~WindowImplX11()
     // Cleanup graphical resources
     cleanup();
 
-    // Destroy the cursor
-    if (m_hiddenCursor)
-        XFreeCursor(m_display, m_hiddenCursor);
-
-    // Destroy the input context
-    if (m_inputContext)
-        XDestroyIC(m_inputContext);
-
     // Destroy the window
     if (m_window && !m_isExternal)
     {
         XDestroyWindow(m_display, m_window);
         XFlush(m_display);
     }
-
-    // Close the input method
-    if (m_inputMethod)
-        XCloseIM(m_inputMethod);
 
     // Close the connection with the X server
     CloseDisplay(m_display);
@@ -393,21 +363,6 @@ void WindowImplX11::setVisible(bool visible)
 
 
 ////////////////////////////////////////////////////////////
-void WindowImplX11::setMouseCursorVisible(bool visible)
-{
-    XDefineCursor(m_display, m_window, visible ? None : m_hiddenCursor);
-    XFlush(m_display);
-}
-
-
-////////////////////////////////////////////////////////////
-void WindowImplX11::setKeyRepeatEnabled(bool enabled)
-{
-    m_keyRepeat = enabled;
-}
-
-
-////////////////////////////////////////////////////////////
 void WindowImplX11::switchToFullscreen(const VideoMode& mode)
 {
     // Check if the XRandR extension is present
@@ -462,61 +417,16 @@ void WindowImplX11::switchToFullscreen(const VideoMode& mode)
 ////////////////////////////////////////////////////////////
 void WindowImplX11::initialize()
 {
-    // Make sure the "last key release" is initialized with invalid values
-    m_lastKeyReleaseEvent.type = -1;
-    m_lastKeyReleaseEvent.xkey.keycode = 0;
-    m_lastKeyReleaseEvent.xkey.time = 0;
-
     // Get the atom defining the close event
     m_atomClose = XInternAtom(m_display, "WM_DELETE_WINDOW", false);
     XSetWMProtocols(m_display, m_window, &m_atomClose, 1);
-
-    // Create the input context
-    m_inputMethod = XOpenIM(m_display, NULL, NULL, NULL);
-    if (m_inputMethod)
-    {
-        m_inputContext = XCreateIC(m_inputMethod,
-                                   XNClientWindow, m_window,
-                                   XNFocusWindow,  m_window,
-                                   XNInputStyle,   XIMPreeditNothing  | XIMStatusNothing,
-                                   (void*)NULL);
-    }
-    else
-    {
-        m_inputContext = NULL;
-    }
-    if (!m_inputContext)
-        err() << "Failed to create input context for window -- TextEntered event won't be able to return unicode" << std::endl;
 
     // Show the window
     XMapWindow(m_display, m_window);
     XFlush(m_display);
 
-    // Create the hiden cursor
-    createHiddenCursor();
-
     // Flush the commands queue
     XFlush(m_display);
-}
-
-
-////////////////////////////////////////////////////////////
-void WindowImplX11::createHiddenCursor()
-{
-    // Create the cursor's pixmap (1x1 pixels)
-    Pixmap cursorPixmap = XCreatePixmap(m_display, m_window, 1, 1, 1);
-    GC graphicsContext = XCreateGC(m_display, cursorPixmap, 0, NULL);
-    XDrawPoint(m_display, cursorPixmap, graphicsContext, 0, 0);
-    XFreeGC(m_display, graphicsContext);
-
-    // Create the cursor, using the pixmap as both the shape and the mask of the cursor
-    XColor color;
-    color.flags = DoRed | DoGreen | DoBlue;
-    color.red = color.blue = color.green = 0;
-    m_hiddenCursor = XCreatePixmapCursor(m_display, cursorPixmap, cursorPixmap, &color, &color, 0, 0);
-
-    // We don't need the pixmap any longer, free it
-    XFreePixmap(m_display, cursorPixmap);
 }
 
 
@@ -544,54 +454,12 @@ void WindowImplX11::cleanup()
         // Reset the fullscreen window
         fullscreenWindow = NULL;
     }
-
-    // Unhide the mouse cursor (in case it was hidden)
-    setMouseCursorVisible(true);
 }
 
 
 ////////////////////////////////////////////////////////////
 bool WindowImplX11::processEvent(XEvent windowEvent)
 {
-    // This function implements a workaround to properly discard
-    // repeated key events when necessary. The problem is that the
-    // system's key events policy doesn't match SFML's one: X server will generate
-    // both repeated KeyPress and KeyRelease events when maintaining a key down, while
-    // SFML only wants repeated KeyPress events. Thus, we have to:
-    // - Discard duplicated KeyRelease events when EnableKeyRepeat is true
-    // - Discard both duplicated KeyPress and KeyRelease events when EnableKeyRepeat is false
-
-    // Detect repeated key events
-    if ((windowEvent.type == KeyPress) || (windowEvent.type == KeyRelease))
-    {
-        if (windowEvent.xkey.keycode < 256)
-        {
-            // To detect if it is a repeated key event, we check the current state of the key.
-            // - If the state is "down", KeyReleased events must obviously be discarded.
-            // - KeyPress events are a little bit harder to handle: they depend on the EnableKeyRepeat state,
-            //   and we need to properly forward the first one.
-            char keys[32];
-            XQueryKeymap(m_display, keys);
-            if (keys[windowEvent.xkey.keycode / 8] & (1 << (windowEvent.xkey.keycode % 8)))
-            {
-                // KeyRelease event + key down = repeated event --> discard
-                if (windowEvent.type == KeyRelease)
-                {
-                    m_lastKeyReleaseEvent = windowEvent;
-                    return false;
-                }
-
-                // KeyPress event + key repeat disabled + matching KeyRelease event = repeated event --> discard
-                if ((windowEvent.type == KeyPress) && !m_keyRepeat &&
-                    (m_lastKeyReleaseEvent.xkey.keycode == windowEvent.xkey.keycode) &&
-                    (m_lastKeyReleaseEvent.xkey.time == windowEvent.xkey.time))
-                {
-                    return false;
-                }
-            }
-        }
-    }
-
     // Convert the X11 event to a sf::Event
     switch (windowEvent.type)
     {
@@ -606,10 +474,6 @@ bool WindowImplX11::processEvent(XEvent windowEvent)
         // Gain focus event
         case FocusIn :
         {
-            // Update the input context
-            if (m_inputContext)
-                XSetICFocus(m_inputContext);
-
             Event event;
             event.type = Event::GainedFocus;
             pushEvent(event);
@@ -619,10 +483,6 @@ bool WindowImplX11::processEvent(XEvent windowEvent)
         // Lost focus event
         case FocusOut :
         {
-            // Update the input context
-            if (m_inputContext)
-                XUnsetICFocus(m_inputContext);
-
             Event event;
             event.type = Event::LostFocus;
             pushEvent(event);
@@ -651,291 +511,9 @@ bool WindowImplX11::processEvent(XEvent windowEvent)
             }
             break;
         }
-
-        // Key down event
-        case KeyPress :
-        {
-            // Get the keysym of the key that has been pressed
-            static XComposeStatus keyboard;
-            char buffer[32];
-            KeySym symbol;
-            XLookupString(&windowEvent.xkey, buffer, sizeof(buffer), &symbol, &keyboard);
-
-            // Fill the event parameters
-            // TODO: if modifiers are wrong, use XGetModifierMapping to retrieve the actual modifiers mapping
-            Event event;
-            event.type        = Event::KeyPressed;
-            event.key.code    = keysymToSF(symbol);
-            event.key.alt     = windowEvent.xkey.state & Mod1Mask;
-            event.key.control = windowEvent.xkey.state & ControlMask;
-            event.key.shift   = windowEvent.xkey.state & ShiftMask;
-            event.key.system  = windowEvent.xkey.state & Mod4Mask;
-            pushEvent(event);
-
-            // Generate a TextEntered event
-            if (!XFilterEvent(&windowEvent, None))
-            {
-                #ifdef X_HAVE_UTF8_STRING
-                if (m_inputContext)
-                {
-                    Status status;
-                    Uint8  keyBuffer[16];
-                    int length = Xutf8LookupString(m_inputContext, &windowEvent.xkey, reinterpret_cast<char*>(keyBuffer), sizeof(keyBuffer), NULL, &status);
-                    if (length > 0)
-                    {
-                        Uint32 unicode = 0;
-                        Utf8::decode(keyBuffer, keyBuffer + length, unicode, 0);
-                        if (unicode != 0)
-                        {
-                            Event textEvent;
-                            textEvent.type         = Event::TextEntered;
-                            textEvent.text.unicode = unicode;
-                            pushEvent(textEvent);
-                        }
-                    }
-                }
-                else
-                #endif
-                {
-                    static XComposeStatus status;
-                    char keyBuffer[16];
-                    if (XLookupString(&windowEvent.xkey, keyBuffer, sizeof(keyBuffer), NULL, &status))
-                    {
-                        Event textEvent;
-                        textEvent.type         = Event::TextEntered;
-                        textEvent.text.unicode = static_cast<Uint32>(keyBuffer[0]);
-                        pushEvent(textEvent);
-                    }
-                }
-            }
-
-            break;
-        }
-
-        // Key up event
-        case KeyRelease :
-        {
-            // Get the keysym of the key that has been pressed
-            char buffer[32];
-            KeySym symbol;
-            XLookupString(&windowEvent.xkey, buffer, 32, &symbol, NULL);
-
-            // Fill the event parameters
-            Event event;
-            event.type        = Event::KeyReleased;
-            event.key.code    = keysymToSF(symbol);
-            event.key.alt     = windowEvent.xkey.state & Mod1Mask;
-            event.key.control = windowEvent.xkey.state & ControlMask;
-            event.key.shift   = windowEvent.xkey.state & ShiftMask;
-            event.key.system  = windowEvent.xkey.state & Mod4Mask;
-            pushEvent(event);
-
-            break;
-        }
-
-        // Mouse button pressed
-        case ButtonPress :
-        {
-            unsigned int button = windowEvent.xbutton.button;
-            if ((button == Button1) || (button == Button2) || (button == Button3) || (button == 8) || (button == 9))
-            {
-                Event event;
-                event.type          = Event::MouseButtonPressed;
-                event.mouseButton.x = windowEvent.xbutton.x;
-                event.mouseButton.y = windowEvent.xbutton.y;
-                switch (button)
-                {
-                    case Button1 : event.mouseButton.button = Mouse::Left;     break;
-                    case Button2 : event.mouseButton.button = Mouse::Middle;   break;
-                    case Button3 : event.mouseButton.button = Mouse::Right;    break;
-                    case 8 :       event.mouseButton.button = Mouse::XButton1; break;
-                    case 9 :       event.mouseButton.button = Mouse::XButton2; break;            
-                }
-                pushEvent(event);
-            }
-            break;
-        }
-
-        // Mouse button released
-        case ButtonRelease :
-        {
-            unsigned int button = windowEvent.xbutton.button;
-            if ((button == Button1) || (button == Button2) || (button == Button3) || (button == 8) || (button == 9))
-            {
-                Event event;
-                event.type          = Event::MouseButtonReleased;
-                event.mouseButton.x = windowEvent.xbutton.x;
-                event.mouseButton.y = windowEvent.xbutton.y;
-                switch (button)
-                {
-                    case Button1 : event.mouseButton.button = Mouse::Left;     break;
-                    case Button2 : event.mouseButton.button = Mouse::Middle;   break;
-                    case Button3 : event.mouseButton.button = Mouse::Right;    break;
-                    case 8 :       event.mouseButton.button = Mouse::XButton1; break;
-                    case 9 :       event.mouseButton.button = Mouse::XButton2; break;            
-                }
-                pushEvent(event);
-            }
-            else if ((button == Button4) || (button == Button5))
-            {
-                Event event;
-                event.type             = Event::MouseWheelMoved;
-                event.mouseWheel.delta = windowEvent.xbutton.button == Button4 ? 1 : -1;
-                event.mouseWheel.x     = windowEvent.xbutton.x;
-                event.mouseWheel.y     = windowEvent.xbutton.y;
-                pushEvent(event);
-            }
-            break;
-        }
-
-        // Mouse moved
-        case MotionNotify :
-        {
-            Event event;
-            event.type        = Event::MouseMoved;
-            event.mouseMove.x = windowEvent.xmotion.x;
-            event.mouseMove.y = windowEvent.xmotion.y;
-            pushEvent(event);
-            break;
-        }
-
-        // Mouse entered
-        case EnterNotify :
-        {
-            Event event;
-            event.type = Event::MouseEntered;
-            pushEvent(event);
-            break;
-        }
-
-        // Mouse left
-        case LeaveNotify :
-        {
-            Event event;
-            event.type = Event::MouseLeft;
-            pushEvent(event);
-            break;
-        }
     }
 
     return true;
-}
-
-
-////////////////////////////////////////////////////////////
-Keyboard::Key WindowImplX11::keysymToSF(KeySym symbol)
-{
-    // First convert to uppercase (to avoid dealing with two different keysyms for the same key)
-    KeySym lower, key;
-    XConvertCase(symbol, &lower, &key);
-
-    switch (key)
-    {
-        case XK_Shift_L :      return Keyboard::LShift;
-        case XK_Shift_R :      return Keyboard::RShift;
-        case XK_Control_L :    return Keyboard::LControl;
-        case XK_Control_R :    return Keyboard::RControl;
-        case XK_Alt_L :        return Keyboard::LAlt;
-        case XK_Alt_R :        return Keyboard::RAlt;
-        case XK_Super_L :      return Keyboard::LSystem;
-        case XK_Super_R :      return Keyboard::RSystem;
-        case XK_Menu :         return Keyboard::Menu;
-        case XK_Escape :       return Keyboard::Escape;
-        case XK_semicolon :    return Keyboard::SemiColon;
-        case XK_slash :        return Keyboard::Slash;
-        case XK_equal :        return Keyboard::Equal;
-        case XK_minus :        return Keyboard::Dash;
-        case XK_bracketleft :  return Keyboard::LBracket;
-        case XK_bracketright : return Keyboard::RBracket;
-        case XK_comma :        return Keyboard::Comma;
-        case XK_period :       return Keyboard::Period;
-        case XK_dead_acute :   return Keyboard::Quote;
-        case XK_backslash :    return Keyboard::BackSlash;
-        case XK_dead_grave :   return Keyboard::Tilde;
-        case XK_space :        return Keyboard::Space;
-        case XK_Return :       return Keyboard::Return;
-        case XK_KP_Enter :     return Keyboard::Return;
-        case XK_BackSpace :    return Keyboard::BackSpace;
-        case XK_Tab :          return Keyboard::Tab;
-        case XK_Prior :        return Keyboard::PageUp;
-        case XK_Next :         return Keyboard::PageDown;
-        case XK_End :          return Keyboard::End;
-        case XK_Home :         return Keyboard::Home;
-        case XK_Insert :       return Keyboard::Insert;
-        case XK_Delete :       return Keyboard::Delete;
-        case XK_KP_Add :       return Keyboard::Add;
-        case XK_KP_Subtract :  return Keyboard::Subtract;
-        case XK_KP_Multiply :  return Keyboard::Multiply;
-        case XK_KP_Divide :    return Keyboard::Divide;
-        case XK_Pause :        return Keyboard::Pause;
-        case XK_F1 :           return Keyboard::F1;
-        case XK_F2 :           return Keyboard::F2;
-        case XK_F3 :           return Keyboard::F3;
-        case XK_F4 :           return Keyboard::F4;
-        case XK_F5 :           return Keyboard::F5;
-        case XK_F6 :           return Keyboard::F6;
-        case XK_F7 :           return Keyboard::F7;
-        case XK_F8 :           return Keyboard::F8;
-        case XK_F9 :           return Keyboard::F9;
-        case XK_F10 :          return Keyboard::F10;
-        case XK_F11 :          return Keyboard::F11;
-        case XK_F12 :          return Keyboard::F12;
-        case XK_F13 :          return Keyboard::F13;
-        case XK_F14 :          return Keyboard::F14;
-        case XK_F15 :          return Keyboard::F15;
-        case XK_Left :         return Keyboard::Left;
-        case XK_Right :        return Keyboard::Right;
-        case XK_Up :           return Keyboard::Up;
-        case XK_Down :         return Keyboard::Down;
-        case XK_KP_0 :         return Keyboard::Numpad0;
-        case XK_KP_1 :         return Keyboard::Numpad1;
-        case XK_KP_2 :         return Keyboard::Numpad2;
-        case XK_KP_3 :         return Keyboard::Numpad3;
-        case XK_KP_4 :         return Keyboard::Numpad4;
-        case XK_KP_5 :         return Keyboard::Numpad5;
-        case XK_KP_6 :         return Keyboard::Numpad6;
-        case XK_KP_7 :         return Keyboard::Numpad7;
-        case XK_KP_8 :         return Keyboard::Numpad8;
-        case XK_KP_9 :         return Keyboard::Numpad9;
-        case XK_A :            return Keyboard::A;
-        case XK_Z :            return Keyboard::Z;
-        case XK_E :            return Keyboard::E;
-        case XK_R :            return Keyboard::R;
-        case XK_T :            return Keyboard::T;
-        case XK_Y :            return Keyboard::Y;
-        case XK_U :            return Keyboard::U;
-        case XK_I :            return Keyboard::I;
-        case XK_O :            return Keyboard::O;
-        case XK_P :            return Keyboard::P;
-        case XK_Q :            return Keyboard::Q;
-        case XK_S :            return Keyboard::S;
-        case XK_D :            return Keyboard::D;
-        case XK_F :            return Keyboard::F;
-        case XK_G :            return Keyboard::G;
-        case XK_H :            return Keyboard::H;
-        case XK_J :            return Keyboard::J;
-        case XK_K :            return Keyboard::K;
-        case XK_L :            return Keyboard::L;
-        case XK_M :            return Keyboard::M;
-        case XK_W :            return Keyboard::W;
-        case XK_X :            return Keyboard::X;
-        case XK_C :            return Keyboard::C;
-        case XK_V :            return Keyboard::V;
-        case XK_B :            return Keyboard::B;
-        case XK_N :            return Keyboard::N;
-        case XK_0 :            return Keyboard::Num0;
-        case XK_1 :            return Keyboard::Num1;
-        case XK_2 :            return Keyboard::Num2;
-        case XK_3 :            return Keyboard::Num3;
-        case XK_4 :            return Keyboard::Num4;
-        case XK_5 :            return Keyboard::Num5;
-        case XK_6 :            return Keyboard::Num6;
-        case XK_7 :            return Keyboard::Num7;
-        case XK_8 :            return Keyboard::Num8;
-        case XK_9 :            return Keyboard::Num9;
-    }
-
-    return Keyboard::Unknown;
 }
 
 } // namespace priv

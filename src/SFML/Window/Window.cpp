@@ -268,36 +268,12 @@ void Window::setVerticalSyncEnabled(bool enabled)
 
 
 ////////////////////////////////////////////////////////////
-void Window::setMouseCursorVisible(bool visible)
-{
-    if (m_impl)
-        m_impl->setMouseCursorVisible(visible);
-}
-
-
-////////////////////////////////////////////////////////////
-void Window::setKeyRepeatEnabled(bool enabled)
-{
-    if (m_impl)
-        m_impl->setKeyRepeatEnabled(enabled);
-}
-
-
-////////////////////////////////////////////////////////////
 void Window::setFramerateLimit(unsigned int limit)
 {
     if (limit > 0)
         m_frameTimeLimit = seconds(1.f / limit);
     else
         m_frameTimeLimit = Time::Zero;
-}
-
-
-////////////////////////////////////////////////////////////
-void Window::setJoystickThreshold(float threshold)
-{
-    if (m_impl)
-        m_impl->setJoystickThreshold(threshold);
 }
 
 
@@ -376,9 +352,7 @@ void Window::initialize()
 {
     // Setup default behaviours (to get a consistent behaviour across different implementations)
     setVisible(true);
-    setMouseCursorVisible(true);
     setVerticalSyncEnabled(false);
-    setKeyRepeatEnabled(true);
 
     // Reset frame time
     m_clock.restart();

@@ -136,22 +136,6 @@ public :
     ////////////////////////////////////////////////////////////
     virtual void setVisible(bool visible);
 
-    ////////////////////////////////////////////////////////////
-    /// \brief Show or hide the mouse cursor
-    ///
-    /// \param visible True to show, false to hide
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void setMouseCursorVisible(bool visible);
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Enable or disable automatic key-repeat
-    ///
-    /// \param enabled True to enable, false to disable
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void setKeyRepeatEnabled(bool enabled);
-
 protected:
 
     ////////////////////////////////////////////////////////////
@@ -193,17 +177,6 @@ private :
     void processEvent(UINT message, WPARAM wParam, LPARAM lParam);
 
     ////////////////////////////////////////////////////////////
-    /// \brief Convert a Win32 virtual key code to a SFML key code
-    ///
-    /// \param key   Virtual key code to convert
-    /// \param flags Additional flags
-    ///
-    /// \return SFML key code corresponding to the key
-    ///
-    ////////////////////////////////////////////////////////////
-    static Keyboard::Key virtualKeyCodeToSF(WPARAM key, LPARAM flags);
-
-    ////////////////////////////////////////////////////////////
     /// \brief Check if the current version of the OS supports
     ///        unicode messages and functions ; Windows 95/98/Me
     ///        may not support it, whereas Windows NT/2000/XP/Vista
@@ -232,10 +205,7 @@ private :
     ////////////////////////////////////////////////////////////
     HWND     m_handle;           ///< Win32 handle of the window
     LONG_PTR m_callback;         ///< Stores the original event callback function of the control
-    HCURSOR  m_cursor;           ///< The system cursor to display into the window
     HICON    m_icon;             ///< Custom icon assigned to the window
-    bool     m_keyRepeatEnabled; ///< Automatic key-repeat state for keydown events
-    bool     m_isCursorIn;       ///< Is the mouse cursor in the window's area ?
     Vector2u m_lastSize;         ///< The last handled size of the window
     bool     m_resizing;         ///< Is the window being resized ?
 };

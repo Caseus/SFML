@@ -123,99 +123,6 @@ public :
     void windowGainedFocus(void);
     
     ////////////////////////////////////////////////////////////
-    /// \brief Mouse Down Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param button
-    /// \param x
-    /// \param y
-    ///
-    ////////////////////////////////////////////////////////////
-    void mouseDownAt(Mouse::Button button, int x, int y);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Mouse Up Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param button
-    /// \param x
-    /// \param y
-    ///
-    ////////////////////////////////////////////////////////////
-    void mouseUpAt(Mouse::Button button, int x, int y);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Mouse Moved Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param x
-    /// \param y
-    ///
-    ////////////////////////////////////////////////////////////
-    void mouseMovedAt(int x, int y);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Mouse Wheel Scrolled Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param delta
-    /// \param x
-    /// \param y
-    ///
-    ////////////////////////////////////////////////////////////
-    void mouseWheelScrolledAt(float delta, int x, int y);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Mouse In Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    ////////////////////////////////////////////////////////////
-    void mouseMovedIn(void);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Mouse Out Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    ////////////////////////////////////////////////////////////
-    void mouseMovedOut(void);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Key Down Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param key
-    ///
-    ////////////////////////////////////////////////////////////
-    void keyDown(Event::KeyEvent key);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Key Up Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param key
-    ///
-    ////////////////////////////////////////////////////////////
-    void keyUp(Event::KeyEvent key);
-    
-    ////////////////////////////////////////////////////////////
-    /// \brief Text Entred Event – called by the cocoa view object.
-    ///
-    /// Send the event to SFML WindowImpl class.
-    ///
-    /// \param charcode Input unicode
-    ///
-    ////////////////////////////////////////////////////////////
-    void textEntered(unichar charcode);
-    
-    ////////////////////////////////////////////////////////////
     /// \brief Apply the context to the view.
     ///
     /// Called by the SFML context object to finalize its creation.
@@ -300,22 +207,6 @@ public :
     ////////////////////////////////////////////////////////////
     virtual void setVisible(bool visible);
 
-    ////////////////////////////////////////////////////////////
-    /// \brief Show or hide the mouse cursor
-    ///
-    /// \param visible True to show, false to hide
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void setMouseCursorVisible(bool visible);
-
-    ////////////////////////////////////////////////////////////
-    /// \brief Enable or disable automatic key-repeat
-    ///
-    /// \param enabled True to enable, false to disable
-    ///
-    ////////////////////////////////////////////////////////////
-    virtual void setKeyRepeatEnabled(bool enabled);
-
 protected :
 
     ////////////////////////////////////////////////////////////
@@ -330,7 +221,6 @@ private :
     // Member data
     ////////////////////////////////////////////////////////////
     WindowImplDelegateRef m_delegate;   ///< Implementation in Obj-C.
-    bool                  m_showCursor; ///< Is the cursor displayed or hidden ?
 };
     
 } // namespace priv

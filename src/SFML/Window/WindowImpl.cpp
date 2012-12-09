@@ -27,7 +27,6 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/WindowImpl.hpp>
 #include <SFML/Window/Event.hpp>
-#include <SFML/Window/JoystickManager.hpp>
 #include <SFML/System/Sleep.hpp>
 #include <algorithm>
 #include <cmath>
@@ -69,13 +68,8 @@ WindowImpl* WindowImpl::create(WindowHandle handle)
 
 
 ////////////////////////////////////////////////////////////
-WindowImpl::WindowImpl() :
-m_joyThreshold(0.1f)
+WindowImpl::WindowImpl()
 {
-    // Get the initial joystick states
-    JoystickManager::getInstance().update();
-    for (unsigned int i = 0; i < Joystick::Count; ++i)
-        m_joyStates[i] = JoystickManager::getInstance().getState(i);
 }
 
 
@@ -83,13 +77,6 @@ m_joyThreshold(0.1f)
 WindowImpl::~WindowImpl()
 {
     // Nothing to do
-}
-
-
-////////////////////////////////////////////////////////////
-void WindowImpl::setJoystickThreshold(float threshold)
-{
-    m_joyThreshold = threshold;
 }
 
 
@@ -102,7 +89,6 @@ bool WindowImpl::popEvent(Event& event, bool block)
         if (!block)
         {
             // Non-blocking mode: process events and continue
-            processJoystickEvents();
             processEvents();
         }
         else
@@ -114,7 +100,6 @@ bool WindowImpl::popEvent(Event& event, bool block)
             // events (which require polling)
             while (m_events.empty())
             {
-                processJoystickEvents();
                 processEvents();
                 sleep(milliseconds(10));
             }
@@ -138,71 +123,6 @@ bool WindowImpl::popEvent(Event& event, bool block)
 void WindowImpl::pushEvent(const Event& event)
 {
     m_events.push(event);
-}
-
-
-////////////////////////////////////////////////////////////
-void WindowImpl::processJoystickEvents()
-{
-    // First update the global joystick states
-    JoystickManager::getInstance().update();
-
-    for (unsigned int i = 0; i < Joystick::Count; ++i)
-    {
-        // Copy the previous state of the joystick and get the new one
-        JoystickState previousState = m_joyStates[i];
-        m_joyStates[i] = JoystickManager::getInstance().getState(i);
-        JoystickCaps caps = JoystickManager::getInstance().getCapabilities(i);
-
-        // Connection state
-        bool connected = m_joyStates[i].connected;
-        if (previousState.connected ^ connected)
-        {
-            Event event;
-            event.type = connected ? Event::JoystickConnected : Event::JoystickDisconnected;
-            event.joystickButton.joystickId = i;
-            pushEvent(event);
-        }
-
-        if (connected)
-        {
-            // Axes
-            for (unsigned int j = 0; j < Joystick::AxisCount; ++j)
-            {
-                if (caps.axes[j])
-                {
-                    Joystick::Axis axis = static_cast<Joystick::Axis>(j);
-                    float prevPos = previousState.axes[axis];
-                    float currPos = m_joyStates[i].axes[axis];
-                    if (fabs(currPos - prevPos) >= m_joyThreshold)
-                    {
-                        Event event;
-                        event.type = Event::JoystickMoved;
-                        event.joystickMove.joystickId = i;
-                        event.joystickMove.axis = axis;
-                        event.joystickMove.position = currPos;
-                        pushEvent(event);
-                    }
-                }
-            }
-
-            // Buttons
-            for (unsigned int j = 0; j < caps.buttonCount; ++j)
-            {
-                bool prevPressed = previousState.buttons[j];
-                bool currPressed = m_joyStates[i].buttons[j];
-
-                if (prevPressed ^ currPressed)
-                {
-                    Event event;
-                    event.type = currPressed ? Event::JoystickButtonPressed : Event::JoystickButtonReleased;
-                    event.joystickButton.joystickId = i;
-                    event.joystickButton.button = j;
-                    pushEvent(event);
-                }
-            }
-        }
-    }
 }
 
 
